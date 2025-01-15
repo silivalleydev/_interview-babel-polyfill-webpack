@@ -2,7 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: './src/index.js', // 진입점 파일
+  entry: './src/index.tsx', // 진입점 파일
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash].js', // 번들 이름에 해시 추가
@@ -10,6 +10,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'], // 처리할 파일 확장자
+    alias: {
+      '@components': path.resolve(__dirname, 'src/components/') // @components를 src/components로 매핑
+    }
   },
   module: {
     rules: [

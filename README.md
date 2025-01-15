@@ -126,6 +126,81 @@ FAQ
 2. `useBuiltIns`: "entry"로 번들 크기가 커질 수 있나요?
 - 네. entry 옵션은 core-js의 모든 폴리필을 추가하므로, 필요 없는 기능까지 포함될 수 있습니다. 번들 크기를 최적화하려면 useBuiltIns: "usage"를 고려하세요.
 
+3. Babel 트랜스파일링 순서: `.tsx` 파일 변환 과정
+`.tsx` 파일은 Babel 설정에 따라 아래와 같은 순서로 트랜스파일링됩니다.
+- **1. TypeScript 타입 제거 및 순수 JavaScript + JSX로 변환**
+  - Babel은 **`@babel/preset-typescript`**를 사용하여 TypeScript의 타입 정보를 제거합니다.
+  - TypeScript 문법을 JavaScript로 변환하며, JSX 문법은 그대로 유지됩니다.
+  - 이 과정에서는 **JSX가 아직 변환되지 않습니다**.
+
+  - **예: `.tsx` → JavaScript + JSX**
+  ```tsx
+  // Input (TypeScript)
+  const greet: string = "Hello!";
+  const App = () => <div>{greet}</div>;
+
+  export default App;
+  ```
+
+  - **출력 (JSX 포함)**
+  ```jsx
+  const greet = "Hello!";
+  const App = () => <div>{greet}</div>;
+
+  export default App;
+  ```
+
+- **2. JSX를 React의 JavaScript 함수로 변환**
+  - Babel은 **`@babel/preset-react`**를 사용하여 JSX를 일반 JavaScript로 변환합니다.
+  - React 16 이하에서는 `React.createElement` 호출로 변환되고, React 17 이상에서는 **새로운 JSX 변환 방식**(`jsx-runtime`)을 사용합니다.
+
+  - **예: JSX → React.createElement**
+  ```jsx
+  const App = () => <div>{greet}</div>;
+  ```
+
+  - **출력**
+  ```javascript
+  const App = () => React.createElement("div", null, greet);
+  ```
+
+- **3. 구형 브라우저 호환 코드로 변환**
+  - Babel은 **`@babel/preset-env`**를 사용하여 구형 브라우저에서도 실행 가능한 ES5 코드로 변환합니다.
+  - `useBuiltIns: "entry"` 설정에 따라 **진입점에 추가된 폴리필(`core-js`)**을 사용하여 최신 JavaScript 기능을 대체합니다.
+
+  - **예: React.createElement → ES5 호환 코드**
+  ```javascript
+  const greet = "Hello!";
+  const App = function App() {
+      return React.createElement("div", null, greet);
+  };
+
+  // 최신 기능이 있다면 폴리필 추가
+  require("core-js/modules/es.array.from.js");
+  const arr = Array.from([1, 2, 3]);
+  ```
+
+- **최종적으로 변환된 코드**
+  - 최종적으로 구형 브라우저에서도 동작 가능한 ES5 코드는 아래와 같습니다:
+
+  ```javascript
+  "use strict";
+
+  require("core-js/modules/es.array.from.js");
+
+  var greet = "Hello!";
+  var App = function App() {
+      return React.createElement("div", null, greet);
+  };
+  var arr = Array.from([1, 2, 3]);
+  ```
+
+- **결론**
+  - `.tsx` 파일은 다음 과정을 거칩니다:
+
+  1. **TypeScript 타입 제거 및 JavaScript + JSX로 변환** (via `@babel/preset-typescript`).
+  2. **JSX를 React 함수 호출로 변환** (via `@babel/preset-react`).
+  3. **최신 JavaScript를 구형 브라우저 호환 코드로 변환** (via `@babel/preset-env`).
 
 ## 타입스크립트
 

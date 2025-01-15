@@ -2,7 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: './src/index.tsx', // 진입점 파일
+  entry: './src/index.js', // 진입점 파일
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash].js', // 번들 이름에 해시 추가
@@ -30,7 +30,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html', // HTML 템플릿 경로
+      template: './public/index.html', // HTML 템플릿 경로
     }),
   ],
 };

@@ -19,17 +19,29 @@ npm install --save-dev @babel/core @babel/preset-env @babel/preset-react @babel/
         ```js
         "presets": [
             [
-            "@babel/preset-env",
-            {
-                "useBuiltIns": "entry", //
-                "corejs": 3
-            }
+                "@babel/preset-env",
+                {
+                    "useBuiltIns": "entry",
+                    "corejs": 3
+                }
             ],
             "@babel/preset-react",
             "@babel/preset-typescript"
         ]
         ```
     - index.js에 직접 core-js를 import해야함
+        ```js
+        import "core-js/stable";
+        import "regenerator-runtime/runtime";
+        import "core-js/stable/array/from"; // 사이즈 줄이고 싶으면 왼쪽과 같이 특정 모듈만 불러오는 방법이 있음
+        import "core-js/stable/promise";
+
+        // 최신 기능 사용
+        const arr = Array.from([1, 2, 3]);
+        console.log(arr);
+
+        ```
+    - index.js에 직접 core-js, regenerator-runtime를 import해야함
         ```js
         import "core-js/stable";
         import "regenerator-runtime/runtime";
@@ -43,6 +55,23 @@ npm install --save-dev @babel/core @babel/preset-env @babel/preset-react @babel/
      -  최적화된 폴리필 추가	
      -  Babel이 코드 분석을 수행해야 함
      -  **번들 크기가 증가할 수 있으므로, 특정 환경에 필요한 폴리필만 포함하고 싶다면 useBuiltIns: "usage"를 사용**
+     -      - 설정코드
+        ```js
+        "presets": [
+            [
+                "@babel/preset-env",
+                {
+                    "useBuiltIns": "usage",
+                    "corejs": 3,
+                    "targets": {
+                       "browsers": "> 0.25%, not dead"
+                    }
+                }
+            ],
+            "@babel/preset-react",
+            "@babel/preset-typescript"
+        ]
+        ```
 
 - `@babel/preset-react`: JSX를 트랜스파일링.
 - `@babel/preset-typescript`: TypeScript를 트랜스파일링.
@@ -64,6 +93,39 @@ npm install --save-dev @babel/core @babel/preset-env @babel/preset-react @babel/
   ]
 }
 ```
+
+#### 바벨 프리셋 동작 순서
+
+- 관련 코드
+```js
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "useBuiltIns": "entry", //
+        "corejs": 3
+      }
+    ],
+    "@babel/preset-react",
+    "@babel/preset-typescript"
+  ]
+}
+```
+- 동작 순서
+1. `@babel/preset-typescript`: TypeScript 타입 제거 및 JavaScript로 변환.
+2. `@babel/preset-react`: JSX를 JavaScript로 변환 (React.createElement 호출 추가 또는 jsx-runtime 활용).
+3. `@babel/preset-env`: 최신 JavaScript를 구형 브라우저 호환 코드로 변환.
+4. `useBuiltIns`: "entry"에 따라 폴리필을 추가.
+
+- FAQ
+FAQ
+1. 왜 `프리셋`이 거꾸로 적용되나요?
+- `Babel`은 `아래쪽 프리셋부터 코드를 처리`하여 `위쪽 프리셋에 넘기기` 때문입니다. 따라서 위의 코드에선 `TypeScript → JSX → 환경 설정` 순으로 처리됩니다.
+
+2. `useBuiltIns`: "entry"로 번들 크기가 커질 수 있나요?
+- 네. entry 옵션은 core-js의 모든 폴리필을 추가하므로, 필요 없는 기능까지 포함될 수 있습니다. 번들 크기를 최적화하려면 useBuiltIns: "usage"를 고려하세요.
+
 
 ## 타입스크립트
 
